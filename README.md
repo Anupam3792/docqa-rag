@@ -175,7 +175,7 @@ Python 3.12 is recommended because some ML/vector-store dependencies may not yet
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/Anupam3792/docqa-rag.git
 cd docqa-rag
 ```
 
