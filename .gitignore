@@ -1,0 +1,6 @@
+venv/
+vectorstore_index/
+.env
+__pycache__/
+*.pyc
+data/sample_docs/Anupam_Kumar_Resume_AI_ML (3).pdf

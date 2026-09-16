@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocQA — AI Document Intelligence</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #07080d;
+      --panel: rgba(17, 19, 29, .72);
+      --panel-solid: #11131d;
+      --border: rgba(255,255,255,.09);
+      --text: #f7f8ff;
+      --muted: #8c91a5;
+      --blue: #6d7cff;
+      --purple: #a855f7;
+      --cyan: #22d3ee;
+      --green: #36d399;
+    }
+
+    body {
+      font-family: Inter, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(109,124,255,.13), transparent 28%),
+        radial-gradient(circle at 85% 20%, rgba(168,85,247,.11), transparent 30%),
+        radial-gradient(circle at 50% 100%, rgba(34,211,238,.07), transparent 30%),
+        var(--bg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .25;
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, black, transparent);
+    }
+
+    .orb {
+      position: fixed;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: .10;
+      pointer-events: none;
+      animation: float 12s ease-in-out infinite;
+    }
+
+    .orb.one {
+      background: #5865f2;
+      top: -180px;
+      left: -120px;
+    }
+
+    .orb.two {
+      background: #a855f7;
+      right: -180px;
+      top: 35%;
+      animation-delay: -5s;
+    }
+
+    @keyframes float {
+      0%,100% { transform: translate(0,0); }
+      50% { transform: translate(35px,-25px); }
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      height: 76px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7,8,13,.68);
+      backdrop-filter: blur(22px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 39px;
+      height: 39px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 800;
+      background: linear-gradient(135deg,#6675ff,#9b4dff);
+      box-shadow:
+        0 0 30px rgba(109,124,255,.3),
+        inset 0 1px rgba(255,255,255,.3);
+    }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 750;
+      letter-spacing: -.4px;
+    }
+
+    .brand-sub {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.035);
+      border-radius: 100px;
+      font-size: 11px;
+      color: #aeb3c5;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--green);
+    }
+
+    .new-btn {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color: #dfe2ee;
+      padding: 9px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .new-btn:hover {
+      background: rgba(255,255,255,.1);
+      transform: translateY(-1px);
+    }
+
+    main {
+      width: min(1100px, calc(100% - 34px));
+      margin: 0 auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 72px 20px 34px;
+      animation: fadeUp .7s ease;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 12px;
+      border-radius: 100px;
+      border: 1px solid rgba(109,124,255,.25);
+      background: rgba(109,124,255,.07);
+      color: #aab3ff;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 22px;
+    }
+
+    .badge span {
+      width: 5px;
+      height: 5px;
+      background: var(--blue);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--blue);
+    }
+
+    h1 {
+      font-size: clamp(38px, 6vw, 68px);
+      line-height: .98;
+      letter-spacing: -3.8px;
+      font-weight: 800;
+      max-width: 850px;
+      margin: auto;
+    }
+
+    h1 .gradient {
+      background: linear-gradient(100deg,#fff 20%,#91a0ff 55%,#c084fc);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      max-width: 610px;
+      margin: 22px auto 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .upload-zone {
+      position: relative;
+      border: 1px dashed rgba(137,148,255,.32);
+      border-radius: 20px;
+      padding: 27px;
+      background:
+        linear-gradient(135deg,rgba(109,124,255,.065),rgba(168,85,247,.035)),
+        rgba(255,255,255,.025);
+      backdrop-filter: blur(15px);
+      transition: .3s;
+      margin-bottom: 20px;
+      animation: fadeUp .8s ease;
+    }
+
+    .upload-zone.drag {
+      border-color: var(--blue);
+      background: rgba(109,124,255,.12);
+      transform: scale(1.01);
+    }
+
+    .upload-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .upload-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .upload-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      background: linear-gradient(135deg,rgba(109,124,255,.17),rgba(168,85,247,.14));
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .upload-title {
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .upload-desc {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .upload-btn {
+      border: 0;
+      padding: 11px 16px;
+      border-radius: 11px;
+      color: white;
+      background: linear-gradient(135deg,#6373ff,#9154ef);
+      cursor: pointer;
+      font-weight: 650;
+      font-size: 12px;
+      box-shadow: 0 8px 25px rgba(109,124,255,.2);
+      transition: .25s;
+    }
+
+    .upload-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(109,124,255,.3);
+    }
+
+    input[type=file] {
+      display: none;
+    }
+
+    /* DOCUMENT SELECTOR */
+
+    .document-selector {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.025);
+      backdrop-filter: blur(15px);
+      animation: fadeUp .35s ease;
+    }
+
+    .document-selector.show {
+      display: flex;
+    }
+
+    .selector-icon {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: rgba(109,124,255,.10);
+      border: 1px solid rgba(109,124,255,.15);
+      font-size: 15px;
+    }
+
+    .selector-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .selector-label {
+      font-size: 10px;
+      color: #777d91;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      margin-bottom: 4px;
+    }
+
+    .selector-title {
+      font-size: 12px;
+      color: #cfd3df;
+    }
+
+    .document-select {
+      min-width: 250px;
+      max-width: 420px;
+      padding: 10px 35px 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: #151824;
+      color: #e5e7f0;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 11px;
+    }
+
+    .document-select:focus {
+      border-color: rgba(109,124,255,.5);
+      box-shadow: 0 0 0 3px rgba(109,124,255,.08);
+    }
+
+    .document-select option {
+      background: #151824;
+      color: white;
+    }
+
+    .document-status {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      background: rgba(54,211,153,.06);
+      border: 1px solid rgba(54,211,153,.15);
+      color: #a5e8ca;
+      font-size: 11px;
+    }
+
+    .document-status.show {
+      display: flex;
+      animation: fadeUp .35s ease;
+    }
+
+    .chat {
+      flex: 1;
+      padding-bottom: 170px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 48px 10px 30px;
+      animation: fadeUp .9s ease;
+    }
+
+    .empty-icon {
+      width: 70px;
+      height: 70px;
+      margin: auto;
+      display: grid;
+      place-items: center;
+      border-radius: 22px;
+      font-size: 29px;
+      background: linear-gradient(135deg,rgba(109,124,255,.12),rgba(168,85,247,.1));
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 70px rgba(79,70,229,.12);
+    }
+
+    .empty h2 {
+      font-size: 18px;
+      margin-top: 18px;
+      letter-spacing: -.5px;
+    }
+
+    .empty p {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 7px;
+    }
+
+    .suggestions {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 10px;
+      margin-top: 27px;
+    }
+
+    .suggestion {
+      text-align: left;
+      padding: 16px;
+      border-radius: 15px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.025);
+      color: #cdd0dc;
+      cursor: pointer;
+      transition: .25s;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .suggestion:hover {
+      transform: translateY(-3px);
+      border-color: rgba(109,124,255,.35);
+      background: rgba(109,124,255,.06);
+      box-shadow: 0 15px 35px rgba(0,0,0,.2);
+    }
+
+    .suggestion small {
+      display: block;
+      color: #777d91;
+      margin-bottom: 8px;
+      font-size: 10px;
+    }
+
+    .message {
+      display: flex;
+      gap: 13px;
+      margin: 22px 0;
+      animation: messageIn .4s ease;
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .avatar {
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .assistant .avatar {
+      background: linear-gradient(135deg,#6675ff,#934cf4);
+      box-shadow: 0 0 20px rgba(109,124,255,.15);
+    }
+
+    .user .avatar {
+      order: 2;
+      background: #202330;
+      color: #cdd1df;
+      border: 1px solid var(--border);
+    }
+
+    .bubble {
+      max-width: 75%;
+      padding: 14px 16px;
+      border-radius: 16px;
+      line-height: 1.65;
+      font-size: 13px;
+    }
+
+    .assistant .bubble {
+      background: rgba(255,255,255,.035);
+      border: 1px solid var(--border);
+      border-top-left-radius: 5px;
+      color: #dfe2ec;
+    }
+
+    .user .bubble {
+      background: linear-gradient(135deg,#5666ee,#704bd0);
+      border-top-right-radius: 5px;
+      color: white;
+      box-shadow: 0 10px 30px rgba(79,70,229,.15);
+    }
+
+    .sources {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .source {
+      padding: 6px 9px;
+      border-radius: 8px;
+      background: rgba(109,124,255,.07);
+      border: 1px solid rgba(109,124,255,.13);
+      color: #9da8ef;
+      font-size: 9px;
+    }
+
+    .thinking {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin: 20px 0;
+    }
+
+    .thinking.show {
+      display: flex;
+    }
+
+    .thinking-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg,#6675ff,#934cf4);
+    }
+
+    .dots {
+      display: flex;
+      gap: 4px;
+      padding: 13px 15px;
+      border-radius: 15px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid var(--border);
+    }
+
+    .dots i {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #9298ad;
+      animation: dot 1.2s infinite;
+    }
+
+    .dots i:nth-child(2) { animation-delay: .15s; }
+    .dots i:nth-child(3) { animation-delay: .3s; }
+
+    @keyframes dot {
+      0%,100% { opacity:.25; transform:translateY(0); }
+      50% { opacity:1; transform:translateY(-3px); }
+    }
+
+    .composer-wrap {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 15;
+      padding: 20px 20px 24px;
+      background: linear-gradient(to top,var(--bg) 55%,transparent);
+    }
+
+    .composer {
+      width: min(850px,100%);
+      margin: auto;
+      position: relative;
+      padding: 7px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.11);
+      background: rgba(15,17,26,.85);
+      backdrop-filter: blur(25px);
+      box-shadow:
+        0 20px 70px rgba(0,0,0,.45),
+        0 0 0 1px rgba(255,255,255,.015);
+    }
+
+    textarea {
+      width: 100%;
+      resize: none;
+      min-height: 48px;
+      max-height: 150px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: white;
+      padding: 14px 58px 12px 14px;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    textarea::placeholder {
+      color: #676c7c;
+    }
+
+    .ask-btn {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      width: 37px;
+      height: 37px;
+      border: 0;
+      border-radius: 11px;
+      cursor: pointer;
+      color: white;
+      background: linear-gradient(135deg,#6272ff,#9250ef);
+      box-shadow: 0 5px 18px rgba(109,124,255,.25);
+      transition: .2s;
+    }
+
+    .ask-btn:hover {
+      transform: scale(1.07);
+    }
+
+    .ask-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .composer-footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 8px 1px;
+      color: #555a6b;
+      font-size: 9px;
+    }
+
+    .toast {
+      position: fixed;
+      top: 90px;
+      right: 22px;
+      z-index: 50;
+      padding: 12px 15px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(18,20,30,.92);
+      backdrop-filter: blur(15px);
+      color: #dce0ec;
+      font-size: 11px;
+      transform: translateX(130%);
+      transition: .35s;
+      box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(15px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+
+    @keyframes messageIn {
+      from { opacity:0; transform:translateY(8px) scale(.99); }
+      to { opacity:1; transform:translateY(0) scale(1); }
+    }
+
+    @media(max-width:700px) {
+      header {
+        padding: 0 15px;
+      }
+
+      .status {
+        display: none;
+      }
+
+      main {
+        width: calc(100% - 20px);
+      }
+
+      .hero {
+        padding-top: 50px;
+      }
+
+      h1 {
+        letter-spacing: -2px;
+      }
+
+      .upload-content {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .upload-btn {
+        width: 100%;
+      }
+
+      .document-selector {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .document-select {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+      }
+
+      .suggestions {
+        grid-template-columns: 1fr;
+      }
+
+      .bubble {
+        max-width: 86%;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+<div class="orb one"></div>
+<div class="orb two"></div>
+
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <div class="logo">D</div>
+      <div>
+        <div class="brand-name">DocQA</div>
+        <div class="brand-sub">AI Document Intelligence</div>
+      </div>
+    </div>
+
+```
+<div class="header-right">
+  <div class="status">
+    <span class="status-dot"></span>
+    Local AI online
+  </div>
+  <button class="new-btn" onclick="newChat()">＋ New chat</button>
+</div>
+```
+
+  </header>
+
+  <main>
+
+```
+<section class="hero">
+  <div class="badge">
+    <span></span>
+    PRIVATE • LOCAL • AI POWERED
+  </div>
+
+  <h1>
+    Talk to your documents
+    <span class="gradient">with intelligence.</span>
+  </h1>
+
+  <p>
+    Upload a document, ask anything, and get grounded answers
+    powered by your local RAG pipeline.
+  </p>
+</section>
+
+<section
+  class="upload-zone"
+  id="dropZone"
+  ondragover="event.preventDefault();this.classList.add('drag')"
+  ondragleave="this.classList.remove('drag')"
+  ondrop="handleDrop(event)"
+>
+  <div class="upload-content">
+
+    <div class="upload-left">
+      <div class="upload-icon">📄</div>
+
+      <div>
+        <div class="upload-title">Add a document</div>
+        <div class="upload-desc">
+          PDF or TXT • Drag & drop or choose a file
+        </div>
+      </div>
+    </div>
+
+    <label class="upload-btn">
+      Choose document
+      <input
+        type="file"
+        id="fileInput"
+        accept=".pdf,.txt"
+        onchange="uploadFile(this.files[0])"
+      >
+    </label>
+
+  </div>
+</section>
+
+<!-- DOCUMENT SELECTOR -->
+
+<div class="document-selector" id="documentSelector">
+
+  <div class="selector-icon">▣</div>
+
+  <div class="selector-info">
+    <div class="selector-label">Search scope</div>
+    <div class="selector-title" id="selectorTitle">
+      Choose which documents DocQA should use
+    </div>
+  </div>
+
+  <select
+    class="document-select"
+    id="documentSelect"
+    onchange="changeDocument(this.value)"
+  >
+    <option value="">All Documents</option>
+  </select>
+
+</div>
+
+<div class="document-status" id="documentStatus">
+  <span>✓</span>
+  <span id="documentText">
+    Document indexed and ready for questions.
+  </span>
+</div>
+
+<section class="chat" id="chat">
+
+  <div class="empty" id="emptyState">
+
+    <div class="empty-icon">✦</div>
+
+    <h2>Your documents, finally searchable.</h2>
+
+    <p>
+      Upload a document and start asking questions.
+    </p>
+
+    <div class="suggestions">
+
+      <button class="suggestion"
+        onclick="useSuggestion('Give me a summary of this document')">
+        <small>SUMMARY</small>
+        Give me a summary of this document
+      </button>
+
+      <button class="suggestion"
+        onclick="useSuggestion('What are the key points in this document?')">
+        <small>INSIGHTS</small>
+        What are the key points in this document?
+      </button>
+
+      <button class="suggestion"
+        onclick="useSuggestion('What information is most important here?')">
+        <small>EXPLORE</small>
+        What information is most important here?
+      </button>
+
+    </div>
+  </div>
+
+  <div id="messages"></div>
+
+  <div class="thinking" id="thinking">
+    <div class="thinking-avatar">✦</div>
+    <div class="dots">
+      <i></i><i></i><i></i>
+    </div>
+  </div>
+
+</section>
+```
+
+  </main>
+
+</div>
+
+<div class="composer-wrap">
+
+  <div class="composer">
+
+```
+<textarea
+  id="question"
+  placeholder="Ask anything about your documents..."
+  rows="1"
+  onkeydown="handleKey(event)"
+></textarea>
+
+<button class="ask-btn" id="askBtn" onclick="askQuestion()">
+  ↑
+</button>
+
+<div class="composer-footer">
+  <span>AI answers are grounded in your documents</span>
+  <span>Enter ↵</span>
+</div>
+```
+
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+  let sessionId = crypto.randomUUID();
+
+  // Currently selected document.
+  // Empty string = search across all documents.
+  let selectedDocument = "";
+
+  const questionInput = document.getElementById("question");
+  const messages = document.getElementById("messages");
+  const emptyState = document.getElementById("emptyState");
+  const thinking = document.getElementById("thinking");
+  const askBtn = document.getElementById("askBtn");
+
+  const documentStatus =
+    document.getElementById("documentStatus");
+
+  const documentText =
+    document.getElementById("documentText");
+
+  const documentSelector =
+    document.getElementById("documentSelector");
+
+  const documentSelect =
+    document.getElementById("documentSelect");
+
+  const selectorTitle =
+    document.getElementById("selectorTitle");
+
+
+  /* -------------------------------------------------------
+     LOAD DOCUMENTS
+  ------------------------------------------------------- */
+
+  async function loadDocuments(selectAfterUpload = null) {
+
+    try {
+
+      const response = await fetch("/documents");
+
+      if (!response.ok) {
+        throw new Error("Could not load documents");
+      }
+
+      const data = await response.json();
+
+      const documents = data.documents || [];
+
+      documentSelect.innerHTML = "";
+
+      const allOption = document.createElement("option");
+      allOption.value = "";
+      allOption.textContent = "All Documents";
+      documentSelect.appendChild(allOption);
+
+      documents.forEach(documentName => {
+
+        const option = document.createElement("option");
+
+        option.value = documentName;
+        option.textContent = documentName;
+
+        documentSelect.appendChild(option);
+      });
+
+      if (documents.length > 0) {
+
+        documentSelector.classList.add("show");
+
+      } else {
+
+        documentSelector.classList.remove("show");
+      }
+
+      // Select newly uploaded document.
+      if (
+        selectAfterUpload &&
+        documents.includes(selectAfterUpload)
+      ) {
+
+        selectedDocument = selectAfterUpload;
+
+        documentSelect.value = selectedDocument;
+
+        updateSelectorText();
+
+      } else {
+
+        documentSelect.value = selectedDocument;
+
+        updateSelectorText();
+      }
+
+    } catch (error) {
+
+      console.error("Document loading error:", error);
+
+      documentSelector.classList.remove("show");
+    }
+  }
+
+
+  /* -------------------------------------------------------
+     DOCUMENT SELECTION
+  ------------------------------------------------------- */
+
+  function changeDocument(documentName) {
+
+    selectedDocument = documentName;
+
+    updateSelectorText();
+
+    if (selectedDocument) {
+
+      showToast(
+        "Searching only in " + selectedDocument
+      );
+
+    } else {
+
+      showToast(
+        "Searching across all documents"
+      );
+    }
+  }
+
+
+  function updateSelectorText() {
+
+    if (selectedDocument) {
+
+      selectorTitle.textContent =
+        "Questions will use only the selected document";
+
+    } else {
+
+      selectorTitle.textContent =
+        "Questions can use all indexed documents";
+    }
+  }
+
+
+  /* -------------------------------------------------------
+     TEXTAREA
+  ------------------------------------------------------- */
+
+  questionInput.addEventListener("input", () => {
+
+    questionInput.style.height = "auto";
+
+    questionInput.style.height =
+      Math.min(questionInput.scrollHeight, 150) + "px";
+  });
+
+
+  function handleKey(event) {
+
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey
+    ) {
+
+      event.preventDefault();
+
+      askQuestion();
+    }
+  }
+
+
+  function useSuggestion(text) {
+
+    questionInput.value = text;
+
+    questionInput.focus();
+
+    questionInput.style.height = "auto";
+
+    questionInput.style.height =
+      questionInput.scrollHeight + "px";
+  }
+
+
+  /* -------------------------------------------------------
+     TOAST
+  ------------------------------------------------------- */
+
+  function showToast(text) {
+
+    const toast =
+      document.getElementById("toast");
+
+    toast.textContent = text;
+
+    toast.classList.add("show");
+
+    setTimeout(() => {
+
+      toast.classList.remove("show");
+
+    }, 2800);
+  }
+
+
+  /* -------------------------------------------------------
+     ADD MESSAGE
+  ------------------------------------------------------- */
+
+  function addMessage(
+    type,
+    text,
+    sources = []
+  ) {
+
+    emptyState.style.display = "none";
+
+    const wrapper =
+      document.createElement("div");
+
+    wrapper.className =
+      `message ${type}`;
+
+    const avatar =
+      document.createElement("div");
+
+    avatar.className = "avatar";
+
+    avatar.textContent =
+      type === "assistant" ? "✦" : "A";
+
+    const content =
+      document.createElement("div");
+
+    const bubble =
+      document.createElement("div");
+
+    bubble.className = "bubble";
+
+    bubble.innerHTML =
+      formatText(text);
+
+    content.appendChild(bubble);
+
+    if (sources && sources.length) {
+
+      const sourceBox =
+        document.createElement("div");
+
+      sourceBox.className = "sources";
+
+      [...new Set(sources)].forEach(source => {
+
+        const tag =
+          document.createElement("div");
+
+        tag.className = "source";
+
+        tag.textContent =
+          "▣ " + source;
+
+        sourceBox.appendChild(tag);
+      });
+
+      content.appendChild(sourceBox);
+    }
+
+    wrapper.appendChild(avatar);
+
+    wrapper.appendChild(content);
+
+    messages.appendChild(wrapper);
+
+    wrapper.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  }
+
+
+  /* -------------------------------------------------------
+     FORMAT TEXT
+  ------------------------------------------------------- */
+
+  function formatText(text) {
+
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\n/g, "<br>");
+  }
+
+
+  /* -------------------------------------------------------
+     ASK QUESTION
+  ------------------------------------------------------- */
+
+  async function askQuestion() {
+
+    const question =
+      questionInput.value.trim();
+
+    if (!question) return;
+
+    addMessage(
+      "user",
+      question
+    );
+
+    questionInput.value = "";
+
+    questionInput.style.height = "auto";
+
+    thinking.classList.add("show");
+
+    askBtn.disabled = true;
+
+    try {
+
+      const response =
+        await fetch("/ask", {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+
+            question,
+
+            session_id: sessionId,
+
+            // IMPORTANT:
+            // Empty string becomes null below.
+            document:
+              selectedDocument || null
+          })
+        });
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.detail || "Request failed"
+        );
+      }
+
+
+      thinking.classList.remove("show");
+
+
+      addMessage(
+        "assistant",
+        data.answer,
+        data.sources || []
+      );
+
+
+    } catch (error) {
+
+      thinking.classList.remove("show");
+
+      addMessage(
+        "assistant",
+        "Something went wrong. Please make sure the API and Ollama are running."
+      );
+
+      showToast(
+        error.message
+      );
+
+
+    } finally {
+
+      askBtn.disabled = false;
+
+      questionInput.focus();
+    }
+  }
+
+
+  /* -------------------------------------------------------
+     UPLOAD
+  ------------------------------------------------------- */
+
+  async function uploadFile(file) {
+
+    if (!file) return;
+
+
+    if (
+      !file.name
+        .toLowerCase()
+        .endsWith(".pdf") &&
+
+      !file.name
+        .toLowerCase()
+        .endsWith(".txt")
+    ) {
+
+      showToast(
+        "Please upload a PDF or TXT file."
+      );
+
+      return;
+    }
+
+
+    const formData =
+      new FormData();
+
+    formData.append(
+      "file",
+      file
+    );
+
+
+    showToast(
+      "Indexing your document..."
+    );
+
+
+    try {
+
+      const response =
+        await fetch("/upload", {
+
+          method: "POST",
+
+          body: formData
+        });
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.detail || "Upload failed"
+        );
+      }
+
+
+      documentStatus.classList.add("show");
+
+
+      documentText.textContent =
+        `${file.name} is indexed and ready for questions.`;
+
+
+      // Refresh document selector
+      // and automatically select uploaded document.
+      await loadDocuments(file.name);
+
+
+      showToast(
+        "Document indexed successfully ✦"
+      );
+
+
+    } catch (error) {
+
+      showToast(
+        error.message ||
+        "Upload failed."
+      );
+    }
+  }
+
+
+  /* -------------------------------------------------------
+     DRAG & DROP
+  ------------------------------------------------------- */
+
+  function handleDrop(event) {
+
+    event.preventDefault();
+
+    document
+      .getElementById("dropZone")
+      .classList.remove("drag");
+
+    const file =
+      event.dataTransfer.files[0];
+
+    uploadFile(file);
+  }
+
+
+  /* -------------------------------------------------------
+     NEW CHAT
+  ------------------------------------------------------- */
+
+  function newChat() {
+
+    sessionId =
+      crypto.randomUUID();
+
+    messages.innerHTML = "";
+
+    emptyState.style.display = "block";
+
+    documentStatus.classList.remove("show");
+
+    questionInput.value = "";
+
+    questionInput.style.height = "auto";
+
+    showToast(
+      "New conversation started."
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  }
+
+
+  /* -------------------------------------------------------
+     INITIALIZE
+  ------------------------------------------------------- */
+
+  loadDocuments();
+
+</script>
+
+</body>
+</html>
